@@ -9,6 +9,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
+# config options
+# SEED = 123456
+# random.seed(a=SEED, version=2)
+
+
 def generate_observed_graph(G: nx.Graph, n_samples: int):
     # TODO: allow for percentage to be passed instead?
     sampled_edges = random.sample(G.edges, n_samples)
