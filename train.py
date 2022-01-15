@@ -2,6 +2,7 @@
 from json import load
 from preprocess import load_graph
 from models.classical import adamic_adar, jaccard_coefficient, preferential_attachment
+from models.kronecker import kronecker
 from sklearn.metrics import roc_curve, roc_auc_score
 import networkx as nx
 import random
@@ -55,6 +56,8 @@ def run_models(models, G, sampled):
             fpr, tpr = generate_roc_curve(jaccard_coefficient(G), sampled)
         elif model == "preferential":
             fpr, tpr = generate_roc_curve(preferential_attachment(G), sampled)
+        elif model == "kronecker":
+            fpr, tpr = generate_roc_curve(kronecker(G), sampled)
 
         acc_results.append([fpr, tpr, model])
 
@@ -73,7 +76,7 @@ def main():
     G_observed, sampled = generate_observed_graph(
         G, int(G.number_of_edges() * percent_to_remove)
     )
-    run_models(["adamic", "jaccard", "preferential"], G_observed, sampled)
+    run_models(["adamic", "jaccard", "preferential", "kronecker"], G_observed, sampled)
 
 
 if __name__ == "__main__":
