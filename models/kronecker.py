@@ -1,5 +1,6 @@
 import subprocess
 import networkx as nx
+import os.path
 
 # TODO: move this to a config file
 snap_dir = "./snap/snap/examples/kronem/"
@@ -54,26 +55,26 @@ def calc_prob(u: int, v: int, mtx):
 def get_probs(G: nx.graph, mtx):
     # needs to return (u, v, prob) like all other models
     probs = []
-    edges = G.number_of_edges()
-    for i in range(edges):
-        for j in range(edges):
+    nodes = G.number_of_nodes()
+    for i in range(nodes):
+        for j in range(nodes):
             if i != j and not G.has_edge(i, j):
                 # we don't care about the probs for observed edges
                 probs.append((i, j, calc_prob(i, j, mtx)))
     return probs
 
 
-def train(stdout_file=None):
+def train(snap_filepath: str, stdout_file=None):
     command = snap_dir + command_name
     if stdout_file:
         with open(stdout_file, "w") as outfile:
             subprocess.call(
                 [
                     command,
-                    "-i:./data/as20graph.txt",
+                    "-i:" + snap_filepath,
                     "-n0:2",
                     '-m:"0.9 0.6; 0.6 0.1"',
-                    "-ei:50",
+                    "-ei:150",
                 ],
                 stdout=outfile,
             )
@@ -81,17 +82,45 @@ def train(stdout_file=None):
         subprocess.call(
             [
                 command,
-                "-i:./data/as20graph.txt",
+                "-i:" + snap_filepath,
                 "-n0:2",
                 '-m:"0.9 0.6; 0.6 0.1"',
-                "-ei:50",
+                "-ei:150",
             ],
         )
 
 
-def kronecker(G: nx.graph):
-    train(stdout_file="kronecker.log")
+def write_graph_to_snap_format(G: nx.graph, data_dir: str, name: str):
+    if os.path.isfile(data_dir + name):
+        # file exists
+        return
+    # snap expects a graph of the format:
+    # SrcNId DstNId
+    with open(data_dir + name, "w") as snap_file:
+        snap_file.write("# " + name + "\n")
+        snap_file.write(
+            f"# Nodes: {G.number_of_nodes()} Edges: {G.number_of_edges()}\n"
+        )
+        snap_file.write("# SrcNId\tDstNId\n")
+        nodes = G.number_of_nodes()
+        for i in range(nodes):
+            for j in range(nodes):
+                if G.has_edge(i, j):
+                    # write the edge to file
+                    snap_file.write(f"{i}\t{j}\n")
+
+
+def kronecker(G: nx.graph, cleanup=False):
+    log_file = "kronecker.log"
+    data_dir = "./data/"
+    snap_file = "connectome.txt"
+    write_graph_to_snap_format(G, data_dir, snap_file)
+    train(snap_filepath=data_dir + snap_file, stdout_file=log_file)
     mtx = extract_prob_matrix("./KronEM-as20graph.tab")
+
+    if cleanup:
+        pass  # TODO: implement
+
     return get_probs(G, mtx)
 
 

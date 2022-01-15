@@ -17,9 +17,11 @@ import numpy as np
 
 def generate_observed_graph(G: nx.Graph, n_samples: int):
     # TODO: allow for percentage to be passed instead?
+    # print(f"Sampling {n_samples} edges from graph...")
     sampled_edges = random.sample(G.edges, n_samples)
     G_observed = G.copy()
     G_observed.remove_edges_from(sampled_edges)
+    # print(G_observed.number_of_nodes())
     return (G_observed, sampled_edges)
 
 
@@ -65,16 +67,17 @@ def run_models(models, G, sampled):
 
 
 def main():
-
-    G = load_graph("connectome")
-    print(f"Loaded graph with nodes: {G.number_of_nodes()} edges {G.number_of_edges()}")
-
-    graph_name = "karate"
+    graph_name = "connectome"
     print(f"Loading graph {graph_name}...")
     G = load_graph(graph_name)  # TODO: make sure graph is undirected?
-    percent_to_remove = 0.25
+    print(f"Loaded graph with nodes: {G.number_of_nodes()} edges {G.number_of_edges()}")
+    percent_to_remove = 0.1
+    print(G.number_of_edges() * percent_to_remove)
     G_observed, sampled = generate_observed_graph(
         G, int(G.number_of_edges() * percent_to_remove)
+    )
+    print(
+        f"Observation graph has nodes: {G_observed.number_of_nodes()}, edges: {G_observed.number_of_edges()}"
     )
     run_models(["adamic", "jaccard", "preferential", "kronecker"], G_observed, sampled)
 
