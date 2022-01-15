@@ -62,6 +62,10 @@ def run_models(models, G, sampled):
 
 
 def main():
+
+    G = load_graph("connectome")
+    print(f"Loaded graph with nodes: {G.number_of_nodes()} edges {G.number_of_edges()}")
+
     graph_name = "karate"
     print(f"Loading graph {graph_name}...")
     G = load_graph(graph_name)  # TODO: make sure graph is undirected?
@@ -69,15 +73,6 @@ def main():
     G_observed, sampled = generate_observed_graph(
         G, int(G.number_of_edges() * percent_to_remove)
     )
-    # predictions = adamic_adar(G_observed)
-    # fpr, tpr = generate_roc_curve(edge_probs=predictions, removed_edges=sampled)
-    # plot_rocs([fpr, tpr, "adamic"])
-    # curves = [
-    #    (*generate_roc_curve(adamic_adar(G_observed), sampled), "adamic"),
-    #    (*generate_roc_curve(jaccard_coefficient(G_observed), sampled), "jaccard"),
-    #    (*generate_roc_curve(preferential_attachment(G_observed), sampled), "pref"),
-    # ]
-    # plot_rocs(curves)
     run_models(["adamic", "jaccard", "preferential"], G_observed, sampled)
 
 
