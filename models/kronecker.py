@@ -17,6 +17,19 @@ class Kronecker:
     )
     matrix: list = None
     stdout_file: str = None
+    # KRONECKER PARAMETERS
+    initiator_matrix: str = (
+        "0.9 0.7; 0.5 0.2"  # Init Gradient Descent Matrix ('R' for random)
+    )
+    m_step_grad_iters: int = 5  # Gradient descent iterations for M-step
+    em_iters: int = 30  # EM iterations
+    min_grad_step: float = 0.001  # Minimum gradient step for M-step
+    max_grad_step: float = 0.008  # Maximum graidient step for M-step
+    warmup_samples: int = 5000  # Samples for MCMC warm-up
+    grad_est_samples: int = 1500  # Samples per gradient estimation
+    sim: bool = False  # Scale the initiator to match the number of edges
+    nsp: float = 0.6  # Probability of using NodeSwap vs EdgeSwap MCMC
+    debug: bool = False  # Debug mode
 
     def extract_prob_matrix(self, loc):
         init_str = None
@@ -76,28 +89,18 @@ class Kronecker:
 
     def train(self):
         command = self.snap_dir + self.command_name
+        args = [  # TODO: implement the rest of these
+            command,
+            "-i:" + self.data_filepath,
+            "-n0:2",
+            "-m:" + self.initiator_matrix,
+            "-ei:" + str(self.em_iters),
+        ]
         if self.stdout_file:
             with open(self.stdout_file, "w") as outfile:
-                subprocess.call(
-                    [
-                        command,
-                        "-i:" + self.data_filepath,
-                        "-n0:2",
-                        '-m:"0.9 0.6; 0.6 0.1"',
-                        "-ei:500",
-                    ],
-                    stdout=outfile,
-                )
+                subprocess.call(args, stdout=outfile)
         else:
-            subprocess.call(
-                [
-                    command,
-                    "-i:" + self.data_filepath,
-                    "-n0:2",
-                    '-m:"0.9 0.6; 0.6 0.1"',
-                    "-ei:500",
-                ],
-            )
+            subprocess.call(args)
 
     def write_graph_to_snap_format(self):
         if os.path.isfile(self.data_filepath):
@@ -121,7 +124,8 @@ class Kronecker:
     def run(self):
         self.write_graph_to_snap_format()
         self.train()
-        return self.extract_prob_matrix("./KronEM-connectome.tab")
+        self.extract_prob_matrix("./KronEM-connectome.tab")
+        return self.get_probs()
 
 
 def kronecker(G: nx.graph, cleanup=False):
