@@ -4,11 +4,14 @@ from preprocess import load_graph
 from models.classical import adamic_adar, jaccard_coefficient, preferential_attachment
 from models.kronecker import kronecker
 from sklearn.metrics import roc_curve, roc_auc_score
+from rich.console import Console
 import networkx as nx
 import random
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+console = Console()
 
 # config options
 # SEED = 123456
@@ -48,20 +51,21 @@ def plot_rocs(*datasets, plot_baseline=True):
 def run_models(models, G, sampled):
     acc_results = []
     for model in models:
-        print(f"Training model: {model}...")
-        # at the moment we'll just get the accuracy score
-        fpr = []
-        tpr = []
-        if model == "adamic":
-            fpr, tpr = generate_roc_curve(adamic_adar(G), sampled)
-        elif model == "jaccard":
-            fpr, tpr = generate_roc_curve(jaccard_coefficient(G), sampled)
-        elif model == "preferential":
-            fpr, tpr = generate_roc_curve(preferential_attachment(G), sampled)
-        elif model == "kronecker":
-            fpr, tpr = generate_roc_curve(kronecker(G), sampled)
+        with console.status(f"[bold green]Training model {model}...") as status:
+            # at the moment we'll just get the accuracy score
+            fpr = []
+            tpr = []
+            if model == "adamic":
+                fpr, tpr = generate_roc_curve(adamic_adar(G), sampled)
+            elif model == "jaccard":
+                fpr, tpr = generate_roc_curve(jaccard_coefficient(G), sampled)
+            elif model == "preferential":
+                fpr, tpr = generate_roc_curve(preferential_attachment(G), sampled)
+            elif model == "kronecker":
+                fpr, tpr = generate_roc_curve(kronecker(G), sampled)
 
-        acc_results.append([fpr, tpr, model])
+            acc_results.append([fpr, tpr, model])
+            console.log(f"finished running model {model}")
 
     plot_rocs(*acc_results)
 
@@ -71,7 +75,7 @@ def main():
     print(f"Loading graph {graph_name}...")
     G = load_graph(graph_name)  # TODO: make sure graph is undirected?
     print(f"Loaded graph with nodes: {G.number_of_nodes()} edges {G.number_of_edges()}")
-    percent_to_remove = 0.1
+    percent_to_remove = 0.05
     print(G.number_of_edges() * percent_to_remove)
     G_observed, sampled = generate_observed_graph(
         G, int(G.number_of_edges() * percent_to_remove)

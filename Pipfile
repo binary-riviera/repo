@@ -10,6 +10,7 @@ pandas = "*"
 sklearn = "*"
 matplotlib = "*"
 black = "*"
+rich = "*"
 
 [dev-packages]
 ipykernel = "*"

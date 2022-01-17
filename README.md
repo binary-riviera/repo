@@ -3,5 +3,7 @@
 ## To Run
 
 ## TODO
-- add kronecker support 
-- finish this readme
+- add ability to specify kronecker parameters
+- add running instructions
+- add ability to run train.py from the command line
+- add AUC calculation
