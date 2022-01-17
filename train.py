@@ -3,6 +3,7 @@ from json import load
 from preprocess import load_graph
 from models.classical import adamic_adar, jaccard_coefficient, preferential_attachment
 from models.kronecker import kronecker
+from models.spectral_clustering import run_spectral_clustering
 from sklearn.metrics import roc_curve, roc_auc_score
 from rich.console import Console
 import networkx as nx
@@ -63,6 +64,8 @@ def run_models(models, G, sampled):
                 fpr, tpr = generate_roc_curve(preferential_attachment(G), sampled)
             elif model == "kronecker":
                 fpr, tpr = generate_roc_curve(kronecker(G), sampled)
+            elif model == "spectral_clustering":
+                run_spectral_clustering(G)
 
             acc_results.append([fpr, tpr, model])
             console.log(f"finished running model {model}")
@@ -83,7 +86,11 @@ def main():
     print(
         f"Observation graph has nodes: {G_observed.number_of_nodes()}, edges: {G_observed.number_of_edges()}"
     )
-    run_models(["adamic", "jaccard", "preferential", "kronecker"], G_observed, sampled)
+    run_models(
+        ["spectral_clustering", "adamic", "jaccard", "preferential", "kronecker"],
+        G_observed,
+        sampled,
+    )
 
 
 if __name__ == "__main__":
