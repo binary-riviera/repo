@@ -1,19 +1,12 @@
+from readline import add_history
 import networkx as nx
-from sklearn.cluster import spectral_clustering
+from sklearn.cluster import SpectralClustering
 
 
 def run_spectral_clustering(G: nx.Graph):
-    # sc = SpectralClustering(
-    #    8, affinity="precomputed", n_init=100, assign_labels="discretize"
-    # )
-
     adj_matrix = nx.convert_matrix.to_numpy_array(G)
-    # sc.fit_predict(adj_matrix)
-    # sc.assign_labels()
-    labels = spectral_clustering(
-        adj_matrix,
-        n_clusters=8,
-        n_init=100,
-        assign_labels="discretize",
-    )
-    print(labels.shape)
+    sc = SpectralClustering(2, affinity="precomputed", n_init=100)
+    sc.fit(adj_matrix)
+
+    # I think sc.labels_[i] is the the group that node i is in?
+    print(sc.labels_)

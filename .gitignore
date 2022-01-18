@@ -4,3 +4,5 @@ __pycache__/
 snap/
 *.tab
 *.log
+libraries/
+pysbm/

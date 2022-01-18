@@ -96,6 +96,7 @@ class Kronecker:
             "-m:" + self.initiator_matrix,
             "-ei:" + str(self.em_iters),
         ]
+
         if self.stdout_file:
             with open(self.stdout_file, "w") as outfile:
                 subprocess.call(args, stdout=outfile)
