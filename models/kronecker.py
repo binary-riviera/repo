@@ -22,7 +22,7 @@ class Kronecker:
         "R"  # "0.9 0.7; 0.5 0.2"  # Init Gradient Descent Matrix ('R' for random)
     )
     m_step_grad_iters: int = 5  # Gradient descent iterations for M-step
-    em_iters: int = 30  # EM iterations
+    em_iters: int = 100  # EM iterations
     min_grad_step: float = 0.001  # Minimum gradient step for M-step
     max_grad_step: float = 0.008  # Maximum graidient step for M-step
     warmup_samples: int = 5000  # Samples for MCMC warm-up
