@@ -4,7 +4,6 @@ import networkx as nx
 from dataclasses import dataclass
 import pandas as pd
 import numpy as np
-from rich.console import Console
 
 
 @dataclass
@@ -15,7 +14,7 @@ class StochasticBlockModel:
     num_blocks: int = 2
     model_type: str = "standard"
     is_directed: bool = False
-    num_iters: int = 100000  # default is 1000 I think
+    num_iters: int = 1000000  # default is 1000 I think
 
     def generate_stochastic_block(self):  # what if is_directed = True?
         standard_partition = pysbm.NxPartition(
@@ -94,7 +93,7 @@ class StochasticBlockModel:
         return self.get_probs()
 
 
-def stochastic_block_model(G: nx.graph, num_blocks=50, model_type="standard"):
+def stochastic_block_model(G: nx.graph, num_blocks=100, model_type="standard"):
     # foo = [len(c) for c in sorted(nx.connected_components(G), key=len, reverse=True)]
     # print(foo)
 

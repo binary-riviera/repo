@@ -3,8 +3,9 @@ from preprocess import load_graph
 from models.classical import adamic_adar, jaccard_coefficient, preferential_attachment
 from models.kronecker import kronecker
 from models.stochastic_block import stochastic_block_model
-from sklearn.metrics import roc_curve, roc_auc_score
+from sklearn.metrics import roc_curve, auc
 from rich.console import Console
+from rich.table import Table
 import networkx as nx
 import random
 import matplotlib.pyplot as plt
@@ -69,6 +70,9 @@ def plot_rocs(*datasets, plot_baseline=True):
 
 def run_models(models, G, sampled):
     acc_results = []
+    table = Table(title="Model Results")
+    table.add_column("Name", justify="left")
+    table.add_column("AUC", justify="left", style="green")
     for model in models:
         with console.status(f"[bold green]Training model {model}...") as status:
             # at the moment we'll just get the accuracy score
@@ -94,37 +98,38 @@ def run_models(models, G, sampled):
                     )
                 elif model == "sbm_hierarchical":
                     fpr, tpr = generate_roc_curve(
-                        stochastic_block_model(G, model_type="hierarchichal"), sampled
+                        stochastic_block_model(G, model_type="hierarchical"), sampled
                     )
                 acc_results.append([fpr, tpr, model])
+                table.add_row(model, str(auc(fpr, tpr)))
                 console.log(f"finished running model {model}")
             except Exception:
                 console.print_exception()
 
+    console.print(table)
     plot_rocs(*acc_results)
 
 
 def main():
     graph_name = "connectome"
-    print(f"Loading graph {graph_name}...")
     G = load_graph(graph_name)  # TODO: make sure graph is undirected?
-
-    print(f"Loaded graph with nodes: {G.number_of_nodes()} edges {G.number_of_edges()}")
+    console.log(
+        f"loaded graph '{graph_name}' with nodes: {G.number_of_nodes()} edges {G.number_of_edges()}"
+    )
     # foo = [len(c) for c in sorted(nx.connected_components(G), key=len, reverse=True)]
     largest_cc = max(nx.connected_components(G), key=len)
     G = G.subgraph(largest_cc).copy()
 
     percent_to_remove = 0.25  # was 0.05
-    print(G.number_of_edges() * percent_to_remove)
+    num_edges_to_remove = int(G.number_of_edges() * percent_to_remove)
     G_observed, sampled = generate_observed_graph_connected(
         G,
-        int(G.number_of_edges() * percent_to_remove),
+        num_edges_to_remove,
         max_component_limit=1,
     )
-    print(
-        f"Observation graph has nodes: {G_observed.number_of_nodes()}, edges: {G_observed.number_of_edges()}"
+    console.log(
+        f"generated observation graph with nodes: {G_observed.number_of_nodes()}, edges: {G_observed.number_of_edges()}. Removed {num_edges_to_remove} edges"
     )
-    print(f"{nx.number_connected_components(G_observed)} connected components")
 
     run_models(
         [

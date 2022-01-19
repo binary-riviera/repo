@@ -19,7 +19,7 @@ class Kronecker:
     stdout_file: str = None
     # KRONECKER PARAMETERS
     initiator_matrix: str = (
-        "0.9 0.7; 0.5 0.2"  # Init Gradient Descent Matrix ('R' for random)
+        "R"  # "0.9 0.7; 0.5 0.2"  # Init Gradient Descent Matrix ('R' for random)
     )
     m_step_grad_iters: int = 5  # Gradient descent iterations for M-step
     em_iters: int = 30  # EM iterations
