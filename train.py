@@ -92,6 +92,10 @@ def run_models(models, G, sampled):
                         stochastic_block_model(G, model_type="degree_corrected"),
                         sampled,
                     )
+                elif model == "sbm_hierarchical":
+                    fpr, tpr = generate_roc_curve(
+                        stochastic_block_model(G, model_type="hierarchichal"), sampled
+                    )
                 acc_results.append([fpr, tpr, model])
                 console.log(f"finished running model {model}")
             except Exception:
@@ -110,7 +114,7 @@ def main():
     largest_cc = max(nx.connected_components(G), key=len)
     G = G.subgraph(largest_cc).copy()
 
-    percent_to_remove = 0.05  # was 0.05
+    percent_to_remove = 0.25  # was 0.05
     print(G.number_of_edges() * percent_to_remove)
     G_observed, sampled = generate_observed_graph_connected(
         G,

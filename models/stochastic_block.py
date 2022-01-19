@@ -7,11 +7,6 @@ import numpy as np
 from rich.console import Console
 
 
-# seems to be a working thin in the examples of pybsm
-
-console = Console()
-
-
 @dataclass
 class StochasticBlockModel:
     """Stochastic Block Model"""
@@ -20,9 +15,9 @@ class StochasticBlockModel:
     num_blocks: int = 2
     model_type: str = "standard"
     is_directed: bool = False
+    num_iters: int = 100000  # default is 1000 I think
 
     def generate_stochastic_block(self):  # what if is_directed = True?
-        print(type(self.G))
         standard_partition = pysbm.NxPartition(
             graph=self.G, number_of_blocks=self.num_blocks
         )
@@ -33,7 +28,7 @@ class StochasticBlockModel:
             standard_inference = pysbm.MetropolisHastingInference(
                 self.G, standard_objective_function, standard_partition
             )
-            standard_inference.infer_stochastic_block_model()
+            standard_inference.infer_stochastic_block_model(self.num_iters)
             self.block_edges = standard_partition.block_edges
             self.block_memberships = standard_partition.get_block_memberships()
         elif self.model_type == "degree_corrected":
@@ -53,9 +48,25 @@ class StochasticBlockModel:
                 degree_corrected_objective_function,
                 degree_corrected_partition,
             )
-            degree_corrected_inference.infer_stochastic_block_model()
+            degree_corrected_inference.infer_stochastic_block_model(self.num_iters)
             self.block_edges = degree_corrected_partition.block_edges
             self.block_memberships = degree_corrected_partition.get_block_memberships()
+        elif self.model_type == "hierarchical":
+            # probably isn't implemented fully correctly
+            hierarchical_partition = pysbm.NxHierarchicalPartition(
+                self.G, number_of_blocks=self.num_blocks
+            )
+            hierarchical_objective_function = (
+                pysbm.LogLikelihoodOfHierarchicalMicrocanonicalNonDegreeCorrected(
+                    is_directed=self.is_directed
+                )
+            )
+            hierarchical_inference = pysbm.PeixotoHierarchicalInference(
+                self.G, hierarchical_objective_function, hierarchical_partition
+            )
+            hierarchical_inference.infer_stochastic_block_model(self.num_iters)
+            self.block_edges = hierarchical_partition.block_edges
+            self.block_memberships = hierarchical_partition.get_block_memberships()
 
     def scale_edges_to_probs(self):
         # this whole function is probably not the correct approach
@@ -79,13 +90,11 @@ class StochasticBlockModel:
 
     def run(self):
         self.generate_stochastic_block()
-        console.log("generated stochastic block matrix")
         self.scale_edges_to_probs()
-        console.log("scaled edge matrix -> prob matrix")
         return self.get_probs()
 
 
-def stochastic_block_model(G: nx.graph, num_blocks=25, model_type="standard"):
+def stochastic_block_model(G: nx.graph, num_blocks=50, model_type="standard"):
     # foo = [len(c) for c in sorted(nx.connected_components(G), key=len, reverse=True)]
     # print(foo)
 
