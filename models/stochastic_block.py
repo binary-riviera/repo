@@ -14,7 +14,7 @@ class StochasticBlockModel:
     num_blocks: int = 2
     model_type: str = "standard"
     is_directed: bool = False
-    num_iters: int = 1000000  # default is 1000 I think
+    num_iters: int = 10000  # default is 1000 I think
 
     def generate_stochastic_block(self):  # what if is_directed = True?
         standard_partition = pysbm.NxPartition(
@@ -51,7 +51,7 @@ class StochasticBlockModel:
             self.block_edges = degree_corrected_partition.block_edges
             self.block_memberships = degree_corrected_partition.get_block_memberships()
         elif self.model_type == "hierarchical":
-            # probably isn't implemented fully correctly
+            # TODO: implement this
             hierarchical_partition = pysbm.NxHierarchicalPartition(
                 self.G, number_of_blocks=self.num_blocks
             )
@@ -93,11 +93,15 @@ class StochasticBlockModel:
         return self.get_probs()
 
 
-def stochastic_block_model(G: nx.graph, num_blocks=100, model_type="standard"):
+def stochastic_block_model(
+    G: nx.graph, num_blocks=30, model_type="standard", num_iters=1000
+):
     # foo = [len(c) for c in sorted(nx.connected_components(G), key=len, reverse=True)]
     # print(foo)
 
-    sbm = StochasticBlockModel(G, num_blocks=num_blocks, model_type=model_type)
+    sbm = StochasticBlockModel(
+        G, num_blocks=num_blocks, model_type=model_type, num_iters=num_iters
+    )
     probs = sbm.run()
     return probs
 

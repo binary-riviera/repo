@@ -57,6 +57,70 @@ def generate_roc_curve(edge_probs, removed_edges):
     return (results[0], results[1])  # we don't particularly care about the thresholds
 
 
+def maximise_auc_sbm(G, sampled):
+    num_iters = [
+        100,
+        1000,
+        2000,
+        5000,
+        10000,
+        20000,
+        50000,
+        100000,
+        200000,
+        500000,
+        1000000,
+    ]
+    num_blocks = [
+        2,
+        3,
+        4,
+        5,
+        10,
+        15,
+        20,
+        25,
+        30,
+        35,
+        40,
+        45,
+        50,
+        55,
+        60,
+        65,
+        70,
+        75,
+        80,
+        85,
+        90,
+        95,
+        100,
+        150,
+        200,
+    ]
+    max_auc = 0
+    max_num_blocks = 0
+    max_num_iters = 0
+    for num_block in num_blocks:
+        for num_iter in num_iters:
+            fpr, tpr = generate_roc_curve(
+                stochastic_block_model(
+                    G, model_type="standard", num_blocks=num_block, num_iters=num_iter
+                ),
+                sampled,
+            )
+            a = auc(fpr, tpr)
+            if a > max_auc:
+                max_auc = a
+                max_num_blocks = num_block
+                max_num_iters = num_iter
+            print(f"Checked blocks: {num_block} iters: {num_iter}")
+
+    print(
+        f"max auc was {max_auc}, with iters {max_num_iters}, blocks: {max_num_blocks}"
+    )
+
+
 def plot_rocs(*datasets, plot_baseline=True):
     print(f"plotting {len(datasets)} results...")
     if plot_baseline:
@@ -131,18 +195,22 @@ def main():
         f"generated observation graph with nodes: {G_observed.number_of_nodes()}, edges: {G_observed.number_of_edges()}. Removed {num_edges_to_remove} edges"
     )
 
-    run_models(
-        [
-            "sbm_standard",
-            "adamic",
-            "jaccard",
-            "preferential",
-            "sbm_degree_corrected",
-            "kronecker",
-        ],
-        G_observed,
-        sampled,
-    )
+    maximise_auc_sbm(G_observed, sampled)
+
+    # run_models(
+    #    [
+    #        "sbm_standard",
+
+
+#         "adamic",
+#        "jaccard",
+#       "preferential",
+#       "sbm_degree_corrected",
+# "kronecker",
+#   ],
+#  G_observed,
+#  sampled,
+# )
 
 
 if __name__ == "__main__":
