@@ -25,8 +25,8 @@ After training and running the models, train.py will then graph the Receiver Ope
 ![Command Line Output](Figure_2.png)
 
 ## TODO
-- fix kronecker
-- add ability to run train.py from the command line
-- add example python notebook
-- add another performance evaluation metric
-- automate testing of sbm parameters to maximise auc
+- Research more datasets
+- Start work on report
+- Try and implement SEAL
+- Try and optimise SBM
+- See if Kronecker is salvageable

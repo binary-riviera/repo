@@ -5,6 +5,8 @@ from dataclasses import dataclass
 import pandas as pd
 import numpy as np
 
+# FIXME: check the group distributions, don't get why incrwasing the # of blocks doesn't increase AUC
+
 
 @dataclass
 class StochasticBlockModel:

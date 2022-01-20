@@ -68,8 +68,8 @@ def maximise_auc_sbm(G, sampled):
         50000,
         100000,
         200000,
-        500000,
-        1000000,
+        # 500000,
+        # 1000000,
     ]
     num_blocks = [
         2,
@@ -114,7 +114,7 @@ def maximise_auc_sbm(G, sampled):
                 max_auc = a
                 max_num_blocks = num_block
                 max_num_iters = num_iter
-            print(f"Checked blocks: {num_block} iters: {num_iter}")
+            print(f"Checked blocks: {num_block} iters: {num_iter} auc:{a}")
 
     print(
         f"max auc was {max_auc}, with iters {max_num_iters}, blocks: {max_num_blocks}"
