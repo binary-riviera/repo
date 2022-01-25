@@ -89,7 +89,7 @@ class Kronecker:
 
     def train(self):
         command = self.snap_dir + self.command_name
-        args = [  # TODO: implement the rest of these
+        args = [
             command,
             "-i:" + self.data_filepath,
             "-n0:2",

@@ -8,7 +8,6 @@ def load_celegans():
 
 
 def load_main_connectome():
-    # TODO: check this, not sure it works?
     df = pd.read_csv("data/Connectome_matrix.csv", index_col=0)
     np_arr = df.to_numpy(dtype=np.integer)
     return nx.convert_matrix.from_numpy_array(np_arr)

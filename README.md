@@ -30,3 +30,7 @@ After training and running the models, train.py will then graph the Receiver Ope
 - Try and implement SEAL
 - Try and optimise SBM
 - See if Kronecker is salvageable
+Minor Things
+- Clean up the repo
+- Add install instructions
+- Work out how to add pysbm to PATH

@@ -10,6 +10,7 @@ import networkx as nx
 import random
 import matplotlib.pyplot as plt
 import numpy as np
+from dgl_connectome import train as train_dgl
 
 
 console = Console()
@@ -22,7 +23,6 @@ console = Console()
 
 
 def generate_observed_graph(G: nx.Graph, n_samples: int):
-    # TODO: allow for percentage to be passed instead?
     # print(f"Sampling {n_samples} edges from graph...")
     sampled_edges = random.sample(G.edges, n_samples)
     G_observed = G.copy()
@@ -164,6 +164,8 @@ def run_models(models, G, sampled):
                     fpr, tpr = generate_roc_curve(
                         stochastic_block_model(G, model_type="hierarchical"), sampled
                     )
+                elif model == "dgl":
+                    fpr, tpr = train_dgl(0.25)
                 acc_results.append([fpr, tpr, model])
                 table.add_row(model, str(auc(fpr, tpr)))
                 console.log(f"finished running model {model}")
@@ -176,7 +178,7 @@ def run_models(models, G, sampled):
 
 def main():
     graph_name = "connectome"
-    G = load_graph(graph_name)  # TODO: make sure graph is undirected?
+    G = load_graph(graph_name)
     console.log(
         f"loaded graph '{graph_name}' with nodes: {G.number_of_nodes()} edges {G.number_of_edges()}"
     )
@@ -195,22 +197,21 @@ def main():
         f"generated observation graph with nodes: {G_observed.number_of_nodes()}, edges: {G_observed.number_of_edges()}. Removed {num_edges_to_remove} edges"
     )
 
-    maximise_auc_sbm(G_observed, sampled)
+    # maximise_auc_sbm(G_observed, sampled)
 
-    # run_models(
-    #    [
-    #        "sbm_standard",
-
-
-#         "adamic",
-#        "jaccard",
-#       "preferential",
-#       "sbm_degree_corrected",
-# "kronecker",
-#   ],
-#  G_observed,
-#  sampled,
-# )
+    run_models(
+        [
+            "sbm_standard",
+            "adamic",
+            "jaccard",
+            "preferential",
+            "sbm_degree_corrected",
+            "dgl",
+            # "kronecker",
+        ],
+        G_observed,
+        sampled,
+    )
 
 
 if __name__ == "__main__":
