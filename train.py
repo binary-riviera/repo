@@ -3,7 +3,7 @@ from preprocess import load_graph
 from models.classical import adamic_adar, jaccard_coefficient, preferential_attachment
 from models.kronecker import kronecker
 from models.stochastic_block import stochastic_block_model
-from sklearn.metrics import roc_curve, auc
+from sklearn.metrics import jaccard_score, roc_curve, auc
 from rich.console import Console
 from rich.table import Table
 import networkx as nx
@@ -20,6 +20,11 @@ console = Console()
 # random.seed(a=SEED, version=2)
 
 # sys.path.append("./libraries/pysbm/pybsm")
+
+
+def debug(x):
+    print(x)
+    return x
 
 
 def generate_observed_graph(G: nx.Graph, n_samples: int):
@@ -46,6 +51,21 @@ def generate_observed_graph_connected(
             new_G.add_edge(*edge_to_remove)
             continue
     return (new_G, sampled_edges)
+
+
+def generate_graphs(
+    G: nx.graph, start_p=0.05, end_p=0.45, step=0.05, keep_connected=True
+):
+    graphs = []
+    for x in np.arange(start_p, end_p, step):
+        print(f"removing {x} nodes from graph g")
+        if keep_connected:
+            graphs.append(
+                generate_observed_graph_connected(G, int(G.number_of_edges() * x))
+            )
+        else:
+            graphs.append(generate_observed_graph(G, int(G.number_of_edges() * x)))
+    return graphs
 
 
 def generate_roc_curve(edge_probs, removed_edges):
@@ -197,8 +217,6 @@ def main():
         f"generated observation graph with nodes: {G_observed.number_of_nodes()}, edges: {G_observed.number_of_edges()}. Removed {num_edges_to_remove} edges"
     )
 
-    # maximise_auc_sbm(G_observed, sampled)
-
     run_models(
         [
             "sbm_standard",
@@ -214,5 +232,43 @@ def main():
     )
 
 
+def main2():
+    graph_name = "connectome"
+    G = load_graph(graph_name)
+    console.log(
+        f"loaded graph '{graph_name}' with nodes: {G.number_of_nodes()} edges {G.number_of_edges()}"
+    )
+    largest_cc = max(nx.connected_components(G), key=len)
+    G = G.subgraph(largest_cc).copy()
+    z = generate_graphs(G)
+
+    # ds = []
+    # print("foo")
+    ds = [debug(auc(*generate_roc_curve(adamic_adar(G), s))) for (G, s) in z]
+    # print("aa")
+    ds_2 = [auc(*generate_roc_curve(jaccard_coefficient(G), s)) for (G, s) in z]
+    # print("jaccard")
+    # ds.append([auc(*generate_roc_curve(kronecker(G), s)) for (G, s) in z])
+
+    # ds.append(
+    #    [
+    #        auc(
+    #            *generate_roc_curve(stochastic_block_model(G, model_type="standard"), s)
+    #        )
+    #        for (G, s) in z
+    #    ]
+    # )
+
+    # labels = ["aa", "jaccard"]
+
+    p_r = list(np.arange(0.05, 0.45, 0.05))
+
+    # n_ds = [(x, p_r, labels[idx]) for (idx, x) in enumerate(ds)]
+
+    foo = (p_r, ds, "aa")
+    bar = (p_r, ds_2, "jaccard")
+    plot_rocs(foo, bar, plot_baseline=False)
+
+
 if __name__ == "__main__":
-    main()
+    main2()
