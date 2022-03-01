@@ -7,3 +7,4 @@ snap/
 libraries/
 pysbm/
 dgl/
+.DS_Store

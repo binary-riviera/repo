@@ -21,8 +21,8 @@ class Kronecker:
     initiator_matrix: str = (
         "R"  # "0.9 0.7; 0.5 0.2"  # Init Gradient Descent Matrix ('R' for random)
     )
-    m_step_grad_iters: int = 5  # Gradient descent iterations for M-step
-    em_iters: int = 100  # EM iterations
+    m_step_grad_iters: int = 10  # Gradient descent iterations for M-step
+    em_iters: int = 150  # EM iterations
     min_grad_step: float = 0.001  # Minimum gradient step for M-step
     max_grad_step: float = 0.008  # Maximum graidient step for M-step
     warmup_samples: int = 5000  # Samples for MCMC warm-up
@@ -30,6 +30,7 @@ class Kronecker:
     sim: bool = False  # Scale the initiator to match the number of edges
     nsp: float = 0.6  # Probability of using NodeSwap vs EdgeSwap MCMC
     debug: bool = False  # Debug mode
+    matrix_size: int = 2  # Init Matrix Size, needs to be reflected in initiator matrix
 
     def extract_prob_matrix(self, loc):
         init_str = None
@@ -44,13 +45,11 @@ class Kronecker:
         else:
             init_str = init_str.replace("Estimated initiator", "").strip()
             init_str = init_str[1:-1]  # remove the brackets
-            row1, row2 = init_str.split(";")
-            row1 = row1.split(",")
-            row2 = row2.split(",")
-            matrix = [
-                [float(row1[0]), float(row1[1])],
-                [float(row2[0]), float(row2[1])],
-            ]
+            rows = init_str.split(";")
+            matrix = [[float(x) for x in row.split(",")] for row in rows]
+            # print(f"{len(matrix)} - {len(matrix[0])}\n {matrix}")
+            assert len(matrix) == self.matrix_size
+            # print(f"extracted matrix of size {self.matrix_size}")
             self.matrix = matrix
 
     def calc_prob(self, u: int, v: int):
@@ -65,7 +64,7 @@ class Kronecker:
         return Prob;
         }
         """
-        dim = 2
+        dim = self.matrix_size  # 2
         p = 1.0
         for _ in range(self.kron_iters):
             p *= self.matrix[u % dim][v % dim]
@@ -92,10 +91,14 @@ class Kronecker:
         args = [
             command,
             "-i:" + self.data_filepath,
-            "-n0:2",
+            "-n0:" + str(self.matrix_size),
             "-m:" + self.initiator_matrix,
             "-ei:" + str(self.em_iters),
+            "-gi:" + str(self.m_step_grad_iters),
         ]
+        # print(args)
+        if self.sim:
+            args.append("-sim")
 
         if self.stdout_file:
             with open(self.stdout_file, "w") as outfile:
@@ -104,9 +107,9 @@ class Kronecker:
             subprocess.call(args)
 
     def write_graph_to_snap_format(self):
-        if os.path.isfile(self.data_filepath):
-            # file exists
-            return
+        # if os.path.isfile(self.data_filepath):
+        # file exists
+        #    return
         # snap expects a graph of the format:
         # SrcNId DstNId
         with open(self.data_filepath, "w") as snap_file:
@@ -122,18 +125,25 @@ class Kronecker:
                         # write the edge to file
                         snap_file.write(f"{i}\t{j}\n")
 
-    def run(self):
+    def run(self, train=True):
         self.write_graph_to_snap_format()
-        self.train()
+        if train:
+            self.train()
         self.extract_prob_matrix("./KronEM-connectome.tab")
         return self.get_probs()
 
 
-def kronecker(G: nx.graph, cleanup=False):
+def kronecker(G: nx.graph, cleanup=False, kron_iters=13, train=True):
+    print("running kronecker with graph ", G, " ...")
     kron = Kronecker(
-        G, data_filepath="./data/connectome.txt", stdout_file="kronecker.log"
+        G,
+        data_filepath="./data/connectome.txt",
+        stdout_file="kronecker.log",
+        kron_iters=kron_iters,
+        sim=False,
+        matrix_size=4,
     )
-    return kron.run()
+    return kron.run(train)
 
 
 if __name__ == "__main__":
