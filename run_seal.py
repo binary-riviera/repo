@@ -4,6 +4,7 @@ import numpy as np
 import scipy.sparse as ssp
 import math
 import random
+import networkx as nx
 
 # add to the path
 sys.path.append("%s/pytorch_DGCNN" % os.path.dirname(os.path.realpath(__file__)))
@@ -13,13 +14,20 @@ sys.path.append("%s/SEAL/Python" % os.path.dirname(os.path.realpath(__file__)))
 from util_functions import *
 
 
-def load_test_train_idxs():
+def load_test_train_idxs(train_file: str, test_file: str):
     # Do not use in actual pipeline
-    train_file = "/Users/alcibiades/Documents/University/Dissertation/repo/SEAL/Python/data/c_train.txt"
-    test_file = "/Users/alcibiades/Documents/University/Dissertation/repo/SEAL/Python/data/c_test.txt"
     train_idx = np.loadtxt(train_file, dtype=int)
     test_idx = np.loadtxt(test_file, dtype=int)
     return (train_idx, test_idx)
+
+
+def convert_graph_to_seal(G: nx.Graph):
+    df = nx.to_pandas_edgelist(G, dtype=int)
+    # last column has weight, which we don't need
+    if len(df.columns) == 3:
+        df = df.iloc[:, :-1]
+    edges = df.to_numpy(dtype=int)
+    return edges
 
 
 def seal(
@@ -32,6 +40,12 @@ def seal(
     no_parallel=False,
     batch_size=50,
 ):
+
+    print(type(train_idx))
+    print(train_idx.shape)
+    print(type(test_idx))
+    print(test_idx.shape)
+
     # I think it expects a numpy 2 x n NDArray
     train_pos = (train_idx[:, 0], train_idx[:, 1])
     test_pos = (test_idx[:, 0], test_idx[:, 1])
@@ -152,6 +166,31 @@ def seal(
     return test_loss[2]  # the auc
 
 
+def run_seal(G, sampled):
+    train_idx = convert_graph_to_seal(G)
+    test_idx = np.array([[a, b] for (a, b) in sampled], dtype=int)
+    return seal(train_idx, test_idx)
+
+
 if __name__ == "__main__":
-    train_idx, test_idx = load_test_train_idxs()
+
+    # seal(train_idx, test_idx)
+
+    from datasets import Connectome
+    from datasets import write_edge_test_split
+
+    c = Connectome()
+    c.generate_splits(end_p=0.15)
+
+    # (G, removed) = c.splits[1]
+    # G.remove_edges_from(nx.selfloop_edges(G))
+    # write_edge_test_split(G, removed, "train.txt", "test.txt")
+    # train_idx, test_idx = load_test_train_idxs("train.txt", "test.txt")
+
+    train_idx = convert_graph_to_seal(G)
+    test_idx = np.array([[a, b] for (a, b) in removed], dtype=int)
+
+    # print(train_idx.shape)
+    # print(test_idx.shape)
+
     seal(train_idx, test_idx)

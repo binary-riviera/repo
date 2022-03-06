@@ -54,6 +54,9 @@ class Dataset:
                     generate_observed_graph(self.G, int(self.G.number_of_edges() * x))
                 )
 
+    def __init__(self):
+        self.G.remove_edges_from(nx.selfloop_edges(self.G))  # removed self loops
+
 
 class Connectome(Dataset):
     def __init__(self):
@@ -64,12 +67,15 @@ class Connectome(Dataset):
         largest_cc = max(nx.weakly_connected_components(temp_G), key=len)
         self.G = temp_G.subgraph(largest_cc).copy()
 
+        super().__init__()
+
 
 class AutonomousSystems(Dataset):
     def __init__(self):
         with open("data/as20graph.txt", "rb") as as_file:
             self.G = nx.read_edgelist(as_file, comments="#")
             print(self.G)
+        super().__init__()
 
 
 class Facebook(Dataset):
@@ -77,18 +83,16 @@ class Facebook(Dataset):
         with open("data/facebook_combined.txt", "rb") as fb_file:
             self.G = nx.read_edgelist(fb_file, comments="#")
             print(self.G)
+        super().__init__()
 
 
 def write_edge_test_split(G: nx.Graph, sampled, train_name: str, test_name: str):
 
     with open(train_name, "w") as train_file:
         # we want to write G here
-        nodes = G.number_of_nodes()
-        for i in range(nodes):
-            for j in range(nodes):
-                if G.has_edge(i, j) and i != j:
-                    # write the edge to file
-                    train_file.write(f"{i} {j}\n")
+        for (u, v) in G.edges():
+            # if u != v:
+            train_file.write(f"{u} {v}\n")
 
     with open(test_name, "w") as test_file:
         # we want to write sampled here

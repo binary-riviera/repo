@@ -3,6 +3,7 @@ from preprocess import load_graph
 from models.classical import adamic_adar, jaccard_coefficient, preferential_attachment
 from models.kronecker import kronecker
 from models.stochastic_block import stochastic_block_model
+from run_seal import run_seal
 from sklearn.metrics import roc_curve, auc
 from rich.console import Console
 from rich.table import Table
@@ -289,6 +290,11 @@ def get_auc_curves(dataset: Dataset):
     #    for (G, s) in mod_splits
     # ]
     # curves.append((p_r, ds, "sbm"))
+
+    # SEAL
+    print("generating curves for SEAL")
+    ds = [run_seal(G, s) for (G, s) in dataset.splits]
+    curves.append((p_r, ds, "SEAL"))
 
     # Kronecker
     print("generating curves for kronecker")
