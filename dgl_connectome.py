@@ -119,6 +119,10 @@ def compute_roc(pos_score, neg_score):
 # 5: training
 
 
+# what I need to do here is
+# take a graph G
+
+
 def train(test_percentage: float):
     # 1: prepare the training and testing sets
     dataset = ConnectomeDataset()
