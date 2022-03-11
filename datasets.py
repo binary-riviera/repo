@@ -56,6 +56,7 @@ class Dataset:
 
     def __init__(self):
         self.G.remove_edges_from(nx.selfloop_edges(self.G))  # removed self loops
+        self.G = nx.convert_node_labels_to_integers(self.G)
 
 
 class Connectome(Dataset):

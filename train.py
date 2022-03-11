@@ -12,6 +12,7 @@ import random
 import matplotlib.pyplot as plt
 import numpy as np
 from dgl_connectome import train as train_dgl
+from dgl_generic import run_sage
 from datasets import *
 
 
@@ -277,7 +278,7 @@ def main2():
 def get_auc_curves(dataset: Dataset):
     # returns [([float],[float],str)]
     curves = []
-    p_r = list(np.arange(0.05, 0.45, 0.05))
+    p_r = list(np.arange(0.05, 0.55, 0.05))
 
     ## Classical Approaches
     mod_splits = [(G.to_undirected(), s) for (G, s) in dataset.splits]
@@ -287,7 +288,7 @@ def get_auc_curves(dataset: Dataset):
     # print("generating curves for stochastic block model")
     # ds = [
     #    auc(*generate_roc_curve(stochastic_block_model(G, model_type="standard"), s))
-    #    for (G, s) in mod_splits
+    #    for (G, s) in dataset.splits
     # ]
     # curves.append((p_r, ds, "sbm"))
 
@@ -297,16 +298,21 @@ def get_auc_curves(dataset: Dataset):
     curves.append((p_r, ds, "SEAL"))
 
     # Kronecker
-    print("generating curves for kronecker")
-    ds = [
-        auc(*generate_roc_curve(kronecker(G), s)) for (G, s) in dataset.splits
-    ]  # mod_splits]
-    curves.append((p_r, ds, "kronecker"))
+    # print("generating curves for kronecker")
+    # ds = [
+    #    auc(*generate_roc_curve(kronecker(G), s)) for (G, s) in dataset.splits
+    # ]  # mod_splits]
+    # curves.append((p_r, ds, "kronecker"))
 
     # Adamic Adar
-    print("generating curves for Adamic Adar")
-    ds = [auc(*generate_roc_curve(adamic_adar(G), s)) for (G, s) in mod_splits]
-    curves.append((p_r, ds, "aa"))
+    # print("generating curves for Adamic Adar")
+    # ds = [auc(*generate_roc_curve(adamic_adar(G), s)) for (G, s) in mod_splits]
+    # curves.append((p_r, ds, "aa"))
+
+    # SAGE
+    print("generating curves for SAGE/DGL")
+    ds = [run_sage(dataset.G, sampled) for (_, sampled) in dataset.splits]
+    curves.append((p_r, ds, "SAGE"))
 
     # Jaccard
     print("generating curves for Jaccard")
@@ -321,11 +327,11 @@ def get_auc_curves(dataset: Dataset):
 def main3():
 
     print("loading dataset")
-    ds = Connectome()
+    ds = AutonomousSystems()
 
     print("generating splits")
     # ds.G = ds.G.to_undirected()
-    ds.generate_splits(keep_connected=True)
+    ds.generate_splits(keep_connected=True, end_p=0.55)
 
     print("Generating Curves")
     c = get_auc_curves(ds)
